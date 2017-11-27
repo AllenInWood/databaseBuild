@@ -132,6 +132,8 @@ record, then the original record will become a 8 byte pointer, which indicates t
               	  2 bytes         4 bytes              2 bytes
 ```
 
+* Relational Manager
+
 # File Format
 
 ``` bash
@@ -164,5 +166,106 @@ record, then the original record will become a 8 byte pointer, which indicates t
 
 In the pointer, -2 is the flag indicating this record is actually a pointer. The page number is int type with 4 bytes, while the slot number is 2 bytes.
 
-* Relational Manager
+* index manager
 
+# meta-data page
+
+The index files saved the index information over the unordered data records stored in the heap file. Just like normal data file, it contains a default page which is used to store three counters and the signature of index file.
+The index file contains two kinds of Node in the B+ tree (leaf node and non-leaf node): 
+Both of them contains a header in page 0 : leafIndicator ('0' for non-leaf, '1' for leaf)(1 byte), numberOfEntry (2 byte), left space (2 byte)
+Non-leaf node has three components : index key (4 byte for Int/Real, various byte for varchar), pointer (4 byte page number which points to the lowerLayer node), and a directory for varchar (left offset which points to the end relative offset of each entry)
+Leaf node has four components : data key which stored in one of records in heap file (4 byte for Int/Real, various byte for varchar), RID (8 byte, 4byte for page number and 4 byte for slot number) which indicate the physical position of each record stored in heap file.
+
+# Index Entry Format
+
+For non-leaf node, it has pointers and key. Pointers are actually page numbers of leaf nodes, they point to those leaves who are bigger (right pointer) or smaller (left pointer) than its keys.
+Its structure is below. The length of key is determined by Attribute type : 4 byte for int / real, various length for varchar.
+``` bash
+					   -------------------------------------------------
+					   |    4 bytes    |      key      |    4 bytes    |     	
+					   -------------------------------------------------
+					   
+					   |- page number -|------key------|- page number -|
+```
+
+As for the leaf node, it has a key and its RID which is a physical attribute of one record stored in the heap file.
+``` bash
+					           ---------------------------------
+					           |      key      |    4 bytes    |     	
+					           ---------------------------------
+					   
+					           |------key------|------RID------|
+```
+
+# Page Format
+
+``` bash
+						      ---------------------> record are inserted accordingly
+			       ---------------------------------------------------------------
+			       |                     |          |          |                 |
+			       |     Header          | PageNum1 |   Key 1  |   PageNum2      |
+			       |                     |          |          |                 |
+			       |-------------------------------------------------------------|
+			       |                                  |                          |
+			       |       ......           ......    |                          |
+			       |                                  |                          |
+			       |----------------------------------                           |
+			       |                                                             |
+			       |                                                             |
+			       |                                                             |
+			       |                           ......                            |
+			       |                                                             |
+			       |                                                             |
+			       |                                                             |
+			       |                        offsets are inserted reversely       |
+			       |                 <-------------------------------------------|
+			       |                 ____________________________________________|
+			       |                |        |        |        |        |        |
+			       |                |  ....  |offset 3|offset 2|offset 1| offset0|
+			       |                |        |        |        |        |        |
+			       ---------------------------------------------------------------
+
+
+						|----------------- Directory ----------------|
+```
+Each Non-leaf page contains a header in the beginning, which is 5 byte totally and 1 byte for leaf indicator(char type, '0' for non-leaf page), 2 byte for number of node in this page, 2 byte for the free space left.
+Then non-leaf nodes are adjacent to the header, which have n keys and (n + 1) page numbers. For varchar, there is a directory which contains the end position (offset) of each node in the end of non-leaf node. It goes in opposite direction so that the free space in the non-leaf page is always in the middle.
+
+leaf-page (leaf node) design.
+``` bash
+
+					     ---------------------> record are inserted accordingly
+		       ---------------------------------------------------------------
+		       |                     |          |          |        |        |
+		       |     Header          |   Key1   |    RID1  |   Key2 |  RID2  |
+		       |                     |          |          |        |        |
+		       |-------------------------------------------------------------|
+		       |                                  |                          |
+		       |       ......           ......    |                          |
+		       |                                  |                          |
+		       |----------------------------------                           |
+		       |                                                             |
+		       |                                                             |
+		       |                                                             |
+		       |                           ......                            |
+		       |                                                             |
+		       |                                                             |
+		       |                                                             |
+		       |                        offsets are inserted reversely       |
+		       |                 <----------------------------------         |
+		       |                 ____________________________________________|
+		       |                |        |        |        |        |        |
+		       |                |  ....  |offset 2|offset 1|offset 0|NextPage|
+		       |                |        |        |        |        |        |
+		       ---------------------------------------------------------------
+
+
+					|----------------- Directory -------|
+```
+
+In the leaf page, it also has a header in the beginning of each node (page), which is 5 byte. But the leaf indicator in header is '1' (char) to indicate this page is a leaf page.
+Then the leaf nodes are adjacent to the header, which has many (key, RID) pairs to label a physical record in the heap file. The length of keys is variable and determined by the type of node (4 byte for INT/Real type and various length for varchar type), and RID length is 8 byte (4 byte for pageNum, 4 byte for slotNum).
+In the end of leaf page there is a int page number (4 byte) who points to the next leaf page which is adjacent in the bottom of B+ tree. And similarly, there is a offset directory which contains the ending offset of each (Key, RID) pair.
+
+# Printing of B+ tree
+<a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/"></a>
