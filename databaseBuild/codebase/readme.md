@@ -268,4 +268,4 @@ Then the leaf nodes are adjacent to the header, which has many (key, RID) pairs 
 In the end of leaf page there is a int page number (4 byte) who points to the next leaf page which is adjacent in the bottom of B+ tree. And similarly, there is a offset directory which contains the ending offset of each (Key, RID) pair.
 
 # Printing of B+ tree
-<a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/"></a>
+<a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/">link</a>
