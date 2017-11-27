@@ -1,4 +1,5 @@
 * Record based file manager
+
 ** record format:
 
 ``` bash
@@ -22,6 +23,8 @@ Can obtain the length of VarChar through the difference between relative offset.
 
 page default: store signature(1088), three counters in the beginning.
 page 0~ : store record
+
+``` bash
 ————————————————————————————————
 |   Records                   |
 |                             |
@@ -35,6 +38,7 @@ page 0~ : store record
 |_____________________________|
 |          |slot |Slot   |Left|
 |__________|table|Number_|Size|
+```
 
 ** Meta-data
 
@@ -119,11 +123,11 @@ record, then the original record will become a 8 byte pointer, which indicates t
 
 ``` bash
 		_____________________________________________________
-                                    	|         |                     |                   |
-                                    	|   -2    |   New Page Number   |  New Slot Number  |
+                |         |                     |                   |
+                |   -2    |   New Page Number   |  New Slot Number  |
 		|_________|_____________________|___________________| 
 		|---------|---------------------|-------------------|
-                                      	  2 bytes         4 bytes              2 bytes
+              	  2 bytes         4 bytes              2 bytes
 ```
 
 ** File Format
@@ -135,9 +139,9 @@ record, then the original record will become a 8 byte pointer, which indicates t
 	       |                                                             |
 	       |-------------------------------------------------------------|
 	       |(1, "Tables", "Tables")(2, "Columns", "Columns")             |
-                                       |                                                             |
+               |                                                             |
 	       |                                                             |
-                   |                                                             |  <-------- Page 0
+               |                                                             |  <-------- Page 0
 	       |                                                             |
 	       |                                                             |
 	       |                 ____________________________________________|
@@ -145,10 +149,10 @@ record, then the original record will become a 8 byte pointer, which indicates t
 	       |                |  ....  | Slot # | Length |   N    |   F    |
 	       |                |        |        |        |        |        |
 	       ---------------------------------------------------------------
-				       |                                                             |
 	       |                                                             |
 	       |                                                             |
-	       |                                                             |  <--------- Other pages (will be appended as the records inserted)
+	       |                                                             |
+	       |                                                             |  <-- Other pages (will be appended as the records inserted)
 	       |                                                             |
 	       |                           ......                            |
 	       |                                                             |
@@ -157,5 +161,6 @@ record, then the original record will become a 8 byte pointer, which indicates t
 ```
 
 In the pointer, -2 is the flag indicating this record is actually a pointer. The page number is int type with 4 bytes, while the slot number is 2 bytes.
+
 * Relational Manager
 
