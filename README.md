@@ -1,6 +1,9 @@
 # databaseBuild
 Build a bottom-up relational database
 
+
+
+
 details below:
 
 # Record based file manager
@@ -25,19 +28,19 @@ page default: store signature(sign), three counters in the beginning.
 page 0~ : store record
 
 ``` bash
-————————————————————————————————
-|   Records                   |
-|                             |
-|                             |
-|                             |
-|                             |
-|                             |
-|                             |
-|                             |
-|                             |
-|_____________________________|
-|          |slot |Slot   |Left|
-|__________|table|Number_|Size|
+	————————————————————————————————
+	|   Records                   |
+	|                             |
+	|                             |
+	|                             |
+	|                             |
+	|                             |
+	|                             |
+	|                             |
+	|                             |
+	|_____________________________|
+	|          |slot |Slot   |Left|
+	|__________|table|Number_|Size|
 ```
 
 * Internal Record Format
