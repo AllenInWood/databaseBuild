@@ -1,6 +1,5 @@
-* Record based file manager
-
-# record format:
+# Record based file manager
+## record format:
 
 ``` bash
 |————————————————————————————————————————————————————————————————————————|
@@ -13,13 +12,13 @@ This format can realize O(1) access in the following action:
 (2)find the exact slot table(offset & length) according to latter half of RID.
 (3)access exact record according to founded slot table.
 
-# category support:
+## category support:
 
 This relational database support three kind categories storing: TypeInt (int), TypeReal (float), TypeVarChar (String)
 Store the VarChar value in “every attribute value (without null)” section without length.
 Can obtain the length of VarChar through the difference between relative offset.
 
-# Page Format:
+## Page Format:
 
 page default: store signature(1088), three counters in the beginning.
 page 0~ : store record
@@ -40,7 +39,7 @@ page 0~ : store record
 |__________|table|Number_|Size|
 ```
 
-# Meta-data
+## Meta-data
 
 The file Tables records all the record files information, including itself. 
 Each record in the file "Tables" has three attributes: table-id (INT type), table-name (VARCHAR type), and file-name (VARCHAR type).
@@ -50,7 +49,7 @@ Here, the value of table-id starts from 1, and will increase every time a new ta
 So when a new catalog is created, the records with table-name "Tables" has id = 1; the records with table-name "Columns" has id = 2.
 The records stored in Tables and Columns follow the format that is shown in the next section.
 
-# Internal Record Format
+## Internal Record Format
 
 The record bit representation format is:
 
@@ -76,7 +75,7 @@ To access a certain attribute, just read its pointer value p1 and its next non-N
 If all the attribute information after this wanted attribute are NULL, then p2 is the end of the whole record, which could be calculated based on the given RID.
 Thus, this bit representation format satisfies O(1)field access.
 
-# Page Format
+## Page Format
 
 ``` bash
            ---------------------> record are inserted accordingly
@@ -116,7 +115,8 @@ They are also short int type. The slot number records the offset value of the he
 The record are storaged one by one without empty bytes in between, and their slots are storaged reversely from the end to the head of the page.
 Both the slot number and the page number are from 0 instead of 1.
 
-# update & delete
+# Operatons
+## update & delete
 
 When delete a record, we first read the page of that record residents in, and find its slot according to the given RID. We first check whether this record has been deleted and whether the record is a pointer (which means this record has been updated and re-inserted into another page). If it has been deleted, then return -1. If it is a pointer, then we update the slot value in this page to be invalid, and go to the pointed page to repeat the operation until we find the corresponding record data. After that, we read out the head offset and the length of the record, and set the slot to be invalid (by setting the value of the slot -1). And then we move the later records forward to fill out the "hole".
 
@@ -132,9 +132,9 @@ record, then the original record will become a 8 byte pointer, which indicates t
               	  2 bytes         4 bytes              2 bytes
 ```
 
-* Relational Manager
+# Relational Manager
 
-# File Format
+## File Format
 
 ``` bash
 	       ---------------------------------------------------------------
@@ -166,7 +166,7 @@ record, then the original record will become a 8 byte pointer, which indicates t
 
 In the pointer, -2 is the flag indicating this record is actually a pointer. The page number is int type with 4 bytes, while the slot number is 2 bytes.
 
-# Extension
+## Extension
 
 In Relation manager, we encapsulate the functions of index manager, and let the relation manager handles both record based heap file and B+ tree file, and keep the index file synchronous with record based file. In order to handle it, we first register each index file in 'Tables' table every time creating a index based file in the following format.
 ``` bash
@@ -177,9 +177,9 @@ In Relation manager, we encapsulate the functions of index manager, and let the 
 The indexFilesName is composed in this format : TableName_AttributeName.idx
 And there is no registration in "Columns" table
 
-* index manager
+# index manager
 
-# meta-data page
+## meta-data page
 
 The index files saved the index information over the unordered data records stored in the heap file. Just like normal data file, it contains a default page which is used to store three counters and the signature of index file.
 The index file contains two kinds of Node in the B+ tree (leaf node and non-leaf node): 
@@ -187,7 +187,7 @@ Both of them contains a header in page 0 : leafIndicator ('0' for non-leaf, '1' 
 Non-leaf node has three components : index key (4 byte for Int/Real, various byte for varchar), pointer (4 byte page number which points to the lowerLayer node), and a directory for varchar (left offset which points to the end relative offset of each entry)
 Leaf node has four components : data key which stored in one of records in heap file (4 byte for Int/Real, various byte for varchar), RID (8 byte, 4byte for page number and 4 byte for slot number) which indicate the physical position of each record stored in heap file.
 
-# Index Entry Format
+## Index Entry Format
 
 For non-leaf node, it has pointers and key. Pointers are actually page numbers of leaf nodes, they point to those leaves who are bigger (right pointer) or smaller (left pointer) than its keys.
 Its structure is below. The length of key is determined by Attribute type : 4 byte for int / real, various length for varchar.
@@ -208,7 +208,7 @@ As for the leaf node, it has a key and its RID which is a physical attribute of 
 					           |------key------|------RID------|
 ```
 
-# Page Format
+## Page Format
 
 ``` bash
 						      ---------------------> record are inserted accordingly
@@ -281,7 +281,7 @@ In the end of leaf page there is a int page number (4 byte) who points to the ne
 # Printing of B+ tree
 <a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/">link</a>
 
-* Query Engine
+# Query Engine
 
 # Join
 ## Block Nested Loop Join
