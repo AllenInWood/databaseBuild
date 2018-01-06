@@ -215,3 +215,41 @@ for the leaf node
 
 * B+ tree printing
 <a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/">link</a>
+
+# Query Engine
+* Catalog extension information
+``` bash
+		   -------------------------------------------------------------
+		   |    id    |     indexTablesName     |    indexFilesName    |     	
+		   -------------------------------------------------------------
+```
+
+* Block Nested Loop Join
+``` bash
+		      number of pages * page size byte
+	   -------------------------------------------------------------
+	   |                                                           | 
+	   |  retrieve until buffer is full                            | 
+leftTable ---------------------------------->                          | 
+	   |                                                           |                   |---------------------------| flush to disk
+	   |                build a in memory hash map                 | 		   |         		   --------------------->
+	   |                                                           |   join		   |	output buffer          |
+	   |                                                           |-----------------------> 		       |
+	   |                                                           |                   ----------------------------- 	
+	   -------------------------------------------------------------
+		/\
+		|
+		|
+		| do a look up each record
+		|
+		|
+	    rightTable
+```
+
+* Index Nested Loop Join
+
+* Grace Hash Join
+
+* Aggregation
+1. Basic aggregation
+2. Group-based hash aggregation
