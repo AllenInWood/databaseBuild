@@ -166,6 +166,17 @@ record, then the original record will become a 8 byte pointer, which indicates t
 
 In the pointer, -2 is the flag indicating this record is actually a pointer. The page number is int type with 4 bytes, while the slot number is 2 bytes.
 
+# Extension
+
+In Relation manager, we encapsulate the functions of index manager, and let the relation manager handles both record based heap file and B+ tree file, and keep the index file synchronous with record based file. In order to handle it, we first register each index file in 'Tables' table every time creating a index based file in the following format.
+``` bash
+		   -------------------------------------------------------------
+		   |    id    |     indexTablesName     |    indexFilesName    |     	
+		   -------------------------------------------------------------
+```
+The indexFilesName is composed in this format : TableName_AttributeName.idx
+And there is no registration in "Columns" table
+
 * index manager
 
 # meta-data page
@@ -269,3 +280,48 @@ In the end of leaf page there is a int page number (4 byte) who points to the ne
 
 # Printing of B+ tree
 <a href="https://alleninwood.github.io/2017/11/21/The-implementation-of-B-tree-printing/">link</a>
+
+* Query Engine
+
+# Join
+## Block Nested Loop Join
+
+Given a buffer size, i.e. block capacity (number of pages * page size), we use a while loop to retrieve records from left table until the records fill all buffer. And we build a hash map through buffer' all records. After that, we retrieve records from right table one by one to do a look up in this hash map. Once joining the right record, we put it into the output buffer (1 page, 4096 bytes). And when buffer is full, we flush the whole output buffer into disk and prepare for further join. Through this line, we retrieve buffer size byte each time retrieving left table.
+``` bash
+	      number of pages * page size byte
+   -------------------------------------------------------------
+   |                                                           | 
+   |  retrieve until buffer is full                            | 
+leftTable ---------------------------------->                  | 
+   |                                                           |                   |---------------------------| flush to disk
+   |                build a in memory hash map                 | 		   |         		   --------------------->
+   |                                                           |   join		   |	output buffer          |
+   |                                                           |-----------------------> 		       |
+   |                                                           |                   ----------------------------- 	
+   -------------------------------------------------------------
+	/\
+	|
+	|
+	| do a look up each record
+	|
+	|
+    rightTable
+```
+
+## Index Nested Loop Join
+We loop through left index file to get each attribute value, and for each attribute, we try to match it in the right index file.
+Once matching, we put it into data for printing.
+
+## Grace Hash Join
+First of all, partition phrase. We malloc an input buffer (number of partitions * PAGE_SIZE) (buildHash function). For R or S table, we retrieve each record into the input buffer's matched page using a self-defined hash function. Eg. if a record's hash number is k, we put it into k'th page in the input buffer. If one page in the input buffer is full, we write the whole page into a partition file. Until exhausting both R and S tables, we get a two batches of partition files (each file's records have the same hashcode).
+Secondly, build phrase. We use buildhash function to retrieve records from R table's partition files and build a in-memory hash map. 
+Thirdly, probe phrase. After building hash map, we read records from S table's partition file one by one, and use a lookUpHash function to match each record in S's partition file. Every time matching, we put the record into a output vector (in outputRes function).
+
+# Aggregation
+## basic:
+First use different function to handle different AggregateOp(min, max, count, sum, average). For instance, we consistently get the next tuple using input iterator acquired in constructor until exhausted. And each time we refresh our min value. Finally, we write the min value and its former null indicator in data to return. Similar implementation way for other four functions.
+
+## group based hash:
+We use a map structure to store the fresh information : key is the value of left attribute, and value is the fresh target value of the right attribute. We implement different functions in order to call in getNextTuple function for different AggregateOp.
+For example, in group sum function, we refresh the pair(for old key) or insert pair(for new key) when getting tuple in input iterator in while loop.
+The map structure is like this format: <valueInLeafKey, currentCount(rightKey)>
