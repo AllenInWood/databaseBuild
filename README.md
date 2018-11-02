@@ -1,10 +1,10 @@
 # databaseBuild
-Build a bottom-up relational database
+A Relational Bottom-up Layered Database Internal Components Build
 
-
-
-
-details below:
+1. Constructed a record-based file manager (RBFM) to manage records and pages in files and a catalog-based relation manager (RM) for maintaining catalogs/indexes files. 
+2. Implemented an index manager (IX) based on B+ Tree structure to create indexes over unordered records stored in heap file. 
+3. Built a query engine (QE) supporting relational operators like filtering, projection, join (nested-block join, nested-index join, grace hash join) and aggregation. 
+4. Database performance reached 1,000,000 records insertion within 5 minutes.
 
 # Record based file manager
 
